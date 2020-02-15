@@ -182,7 +182,7 @@ def evaluate(args, model, tokenizer, prefix=""):
     eval_sampler = SequentialSampler(eval_dataset) if args.local_rank == -1 else DistributedSampler(eval_dataset)
     eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size,
                                  collate_fn=collate_fn)
-    # Eval!
+    # Eval
     logger.info("***** Running evaluation %s *****", prefix)
     logger.info("  Num examples = %d", len(eval_dataset))
     logger.info("  Batch size = %d", args.eval_batch_size)
@@ -242,7 +242,7 @@ def predict(args, model, tokenizer, prefix=""):
     # Note that DistributedSampler samples randomly
     test_sampler = SequentialSampler(test_dataset) if args.local_rank == -1 else DistributedSampler(test_dataset)
     test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=1, collate_fn=collate_fn)
-    # Eval!
+    # Eval
     logger.info("***** Running prediction %s *****", prefix)
     logger.info("  Num examples = %d", len(test_dataset))
     logger.info("  Batch size = %d", 1)
@@ -263,10 +263,7 @@ def predict(args, model, tokenizer, prefix=""):
             preds, _ = model.crf._obtain_labels(logits, args.id2label, inputs['input_lens'])
         preds = preds[0][1:-1]  # [CLS]XXXX[SEP]
         label_entities = get_entities(preds, args.id2label, args.markup)
-        json_d = {}
-        json_d['id'] = step
-        json_d['tag_seq'] = " ".join(preds)
-        json_d['entities'] = label_entities
+        json_d = {'id': step, 'tag_seq': " ".join(preds), 'entities': label_entities}
         results.append(json_d)
         pbar(step)
     print(" ")
@@ -277,7 +274,8 @@ def predict(args, model, tokenizer, prefix=""):
 
 def load_and_cache_examples(args, task, tokenizer, data_type='train'):
     if args.local_rank not in [-1, 0] and not evaluate:
-        torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
+        # Make sure only the first process in distributed training process the dataset, the others will use the cache
+        torch.distributed.barrier()
     processor = processors[task]()
     # Load data features from cache or dataset file
     cached_features_file = os.path.join(args.data_dir, 'cached_crf-{}_{}_{}_{}'.format(
@@ -300,8 +298,8 @@ def load_and_cache_examples(args, task, tokenizer, data_type='train'):
         features = convert_examples_to_features(examples=examples,
                                                 tokenizer=tokenizer,
                                                 label_list=label_list,
-                                                max_seq_length=args.train_max_seq_length if data_type == 'train' \
-                                                    else args.eval_max_seq_length,
+                                                max_seq_length=args.train_max_seq_length if data_type == 'train'
+                                                else args.eval_max_seq_length,
                                                 cls_token_at_end=bool(args.model_type in ["xlnet"]),
                                                 pad_on_left=bool(args.model_type in ['xlnet']),
                                                 cls_token=tokenizer.cls_token,

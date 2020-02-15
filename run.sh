@@ -4,7 +4,7 @@ export GLUE_DIR=$CURRENT_DIR/datasets
 export OUTPUR_DIR=$CURRENT_DIR/outputs
 TASK_NAME="cner"
 
-python3 run_ner_crf.py \
+python3 main.py \
   --model_type=bert \
   --model_name_or_path=$BERT_BASE_DIR \
   --task_name=$TASK_NAME \

@@ -27,10 +27,9 @@ python>=3.6
 
 1. torch>=1.1.0
 2. cuda>=9.0
-3. argparse
 
 ```
-pip install -r requirements.txt
+pip install torch>=1.1.0
 ```
 
 ## Usage

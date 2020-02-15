@@ -1,26 +1,41 @@
-# Chinese NER using Bert
+# NER models
 
-BERT for Chinese NER. 
+solution of Named Entity Recognition(NER) task, include BERT series model, BiLSTM-CRF model.
 
-## dataset list
+
+## Dataset
 
 1. cner: datasets/cner
-2. CLUENER: https://github.com/CLUEbenchmark/CLUENER
+2. CLUENER: http://www.cluebenchmark.com/introduce.html
 
-## model list
+## Models
 
 1. BERT+Softmax
 2. BERT+CRF
 3. BERT+Span
 4. BERT+Span+label_smoothing
 5. BERT+Span+focal_loss
+6. BiLSTM+CRF
 
-## requirement
+## Install
 
-1. pytorch=1.1.0
-2. cuda=9.0
+- Python
 
-## input format
+python>=3.6
+
+- Requirements
+
+1. pytorch>=1.1.0
+2. cuda>=9.0
+3. argparse
+
+```
+pip install -r requirements.txt
+```
+
+## Usage
+
+### Input Data Format
 
 Input format (prefer BIOS tag scheme), with each character its label for one line. Sentences are splited with a null line.
 
@@ -41,23 +56,30 @@ Input format (prefer BIOS tag scheme), with each character its label for one lin
 生	O 
 ```
 
-## run the code
+### Download Google Bert Model
 
-1. Modify the configuration information in `run_ner_xxx.py` or `run_ner_xxx.sh` .
-2. `sh run_ner_xxx.sh`
+* Download the ``google_model.bin`` from [here](https://share.weiyun.com/5GuzfVX), and save it to the ``prev_trained_model/bert-base`` directory.
 
 **note**: file structure of the model
 
 ```text
 ├── prev_trained_model
 |  └── bert_base
-|  |  └── pytorch_model.bin
-|  |  └── config.json
-|  |  └── vocab.txt
+|  |  └── google_model.bin
+|  |  └── google_config.json
+|  |  └── google_vocab.txt
 |  |  └── ......
 ```
 
-## CLUENER result
+### Run model
+
+
+1. Modify the configuration information in `run_ner_xxx.py` or `run_ner_xxx.sh` .
+2. `sh run_ner_xxx.sh`
+
+## Result
+
+### CLUENER result
 
 Tne overall performance of BERT on **dev**:
 
@@ -70,7 +92,7 @@ Tne overall performance of BERT on **dev**:
 | BERT+Span+label_smoothing   | **0.8235** | 0.7946 | 0.8088 | train_max_length=128 eval_max_length=512 epoch=4 lr=3e-5 batch_size=24 loss_type=lsr |
 
 
-## Cner result
+### Cner result
 
 Tne overall performance of BERT on **dev(test)**:
 
@@ -102,3 +124,8 @@ The entity performance performance of BERT on **test**:
 
 
 
+
+
+## Reference
+
+* [CLUENER2020](https://github.com/CLUEbenchmark/CLUENER2020)

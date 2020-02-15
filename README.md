@@ -25,7 +25,7 @@ python>=3.6
 
 - Requirements
 
-1. pytorch>=1.1.0
+1. torch>=1.1.0
 2. cuda>=9.0
 3. argparse
 
@@ -58,7 +58,7 @@ Input format (prefer BIOS tag scheme), with each character its label for one lin
 
 ### Download Google Bert Model
 
-* Download the ``google_model.bin`` from [here](https://share.weiyun.com/5GuzfVX), and save it to the ``prev_trained_model/bert-base`` directory.
+* Download the ``google_model.bin`` from [here](https://pan.baidu.com/s/1s532C5WXqTaFNEaHjtr_Mw  key:u7eg), and save it to the ``prev_trained_model/bert-base`` directory.
 
 **note**: file structure of the model
 

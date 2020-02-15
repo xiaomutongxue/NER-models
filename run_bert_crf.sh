@@ -4,7 +4,7 @@ export GLUE_DIR=$CURRENT_DIR/datasets
 export OUTPUR_DIR=$CURRENT_DIR/outputs
 TASK_NAME="cner"
 
-python3 main.py \
+python3 run_bert_crf.py \
   --model_type=bert \
   --model_name_or_path=$BERT_BASE_DIR \
   --task_name=$TASK_NAME \
@@ -17,7 +17,7 @@ python3 main.py \
   --per_gpu_train_batch_size=24 \
   --per_gpu_eval_batch_size=24 \
   --learning_rate=3e-5 \
-  --num_train_epochs=1.0 \
+  --num_train_epochs=3.0 \
   --logging_steps=448 \
   --save_steps=448 \
   --output_dir=$OUTPUR_DIR/${TASK_NAME}_output/ \

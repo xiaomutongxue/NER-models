@@ -57,7 +57,7 @@ Input format (prefer BIOS tag scheme), with each character its label for one lin
 
 ### Download Google Bert Model
 
-* Download the ``google_model.bin`` from [here](https://pan.baidu.com/s/1s532C5WXqTaFNEaHjtr_Mw  key:u7eg), and save it to the ``prev_trained_model/bert-base`` directory.
+* Download the ``google_model.bin`` from [https://pan.baidu.com/s/1s532C5WXqTaFNEaHjtr_Mw  key:u7eg], and save it to the ``prev_trained_model/bert-base`` directory.
 
 **note**: file structure of the model
 

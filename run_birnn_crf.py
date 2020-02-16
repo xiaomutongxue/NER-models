@@ -165,7 +165,7 @@ def get_entity_bios(seq, id2label=None):
 
 def predict(args):
     logger.info('predict sentence:')
-    logger.info(args.predict_sentence)
+    logger.info(str(args.predict_sentence))
     results = WordsTagger(args.output_dir, args.device)([args.predict_sentence])
     logger.info(json.dumps(results, ensure_ascii=False))
     save_json_file(results, os.path.join(args.output_dir, FILE_PREDICT))

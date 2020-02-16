@@ -15,7 +15,8 @@ from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 
 from ner.models.birnncrf.birnn_crf import BiRnnCrf
-from ner.processors.ner_rnncrf import Processor, load_json_file, FILE_MODEL, FILE_ARGUMENTS, save_json_file
+from ner.processors.ner_rnncrf import Processor, load_json_file, FILE_MODEL, FILE_ARGUMENTS, save_json_file, \
+    FILE_PREDICT
 from ner.processors.ner_seq import ner_processors as processors
 from ner.tools.common import logger, init_logger, seed_everything
 
@@ -65,19 +66,17 @@ class WordsTagger:
         args_ = load_json_file(os.path.join(output_dir, FILE_ARGUMENTS))
         args = argparse.Namespace(**args_)
         args.output_dir = output_dir
-        self.args = args
 
         self.preprocessor = Processor(output_dir=output_dir, verbose=False)
-        self.model = build_model(self.args, self.preprocessor, load=True, verbose=False)
+        self.model = build_model(args, self.preprocessor, load=True)
         self.device = running_device(device)
         self.model.to(self.device)
 
         self.model.eval()
 
-    def __call__(self, sentences, begin_tags="BS"):
+    def __call__(self, sentences):
         """predict texts
         :param sentences: a text or a list of text
-        :param begin_tags: begin tags for the beginning of a span
         :return:
         """
         if not isinstance(sentences, (list, tuple)):
@@ -92,30 +91,76 @@ class WordsTagger:
         except RuntimeError as e:
             logger.info("*** runtime error: {}".format(e))
             raise e
-        return tags, self.tokens_from_tags(sentences, tags, begin_tags=begin_tags)
+        return tags, self.tokens_from_tags(sentences, tags)
 
     @staticmethod
-    def tokens_from_tags(sentences, tags_list, begin_tags):
+    def tokens_from_tags(sentences, tags_list):
         """extract entities from tags
         :param sentences: a list of sentence
         :param tags_list: a list of tags
-        :param begin_tags:
         :return:
         """
         if not tags_list:
             return []
 
         def _tokens(sentence, ts):
-            begins = [(idx, t[2:]) for idx, t in enumerate(ts) if t[0] in begin_tags] + [(len(ts), "O")]
-            if begins[0][0] != 0:
-                logger.info('warning: tags does begin with any of {}: \n{}\n{}'.format(begin_tags, sentence, ts))
-                begins.insert(0, (0, 0))
-
-            tokens_ = [(sentence[s:e], tag) for (s, tag), (e, _) in zip(begins[:-1], begins[1:])]
-            return [((t, tag) if tag else t) for t, tag in tokens_]
+            idx_entity = get_entity_bios(ts)
+            tokens = []
+            for entity in idx_entity:
+                begin = entity[1]
+                end = entity[2]
+                tag = entity[0]
+                tokens.append((sentence[begin:end+1],tag))
+            return tokens
 
         tokens_list = [_tokens(sentence, ts) for sentence, ts in zip(sentences, tags_list)]
         return tokens_list
+
+
+def get_entity_bios(seq, id2label=None):
+    """Gets entities from sequence.
+    note: BIOS
+    Args:
+        seq (list): sequence of labels.
+        id2label: id to label dict
+    Returns:
+        list: list of (chunk_type, chunk_start, chunk_end).
+    Example:
+        # >>> seq = ['B-PER', 'I-PER', 'O', 'S-LOC']
+        # >>> get_entity_bios(seq)
+        [['PER', 0,1], ['LOC', 3, 3]]
+    """
+    chunks = []
+    chunk = [-1, -1, -1]
+    for indx, tag in enumerate(seq):
+        if not isinstance(tag, str):
+            tag = id2label[tag]
+        if tag.startswith("S-"):
+            if chunk[2] != -1:
+                chunks.append(chunk)
+            chunk = [-1, -1, -1]
+            chunk[1] = indx
+            chunk[2] = indx
+            chunk[0] = tag.split('-')[1]
+            chunks.append(chunk)
+            chunk = (-1, -1, -1)
+        if tag.startswith("B-"):
+            if chunk[2] != -1:
+                chunks.append(chunk)
+            chunk = [-1, -1, -1]
+            chunk[1] = indx
+            chunk[0] = tag.split('-')[1]
+        elif tag.startswith('I-') and chunk[1] != -1:
+            _type = tag.split('-')[1]
+            if _type == chunk[0]:
+                chunk[2] = indx
+            if indx == len(seq) - 1:
+                chunks.append(chunk)
+        else:
+            if chunk[2] != -1:
+                chunks.append(chunk)
+            chunk = [-1, -1, -1]
+    return chunks
 
 
 def predict(args):
@@ -123,10 +168,11 @@ def predict(args):
     logger.info(args.predict_sentence)
     results = WordsTagger(args.output_dir, args.device)([args.predict_sentence])
     logger.info(json.dumps(results, ensure_ascii=False))
+    save_json_file(results, os.path.join(args.output_dir, FILE_PREDICT))
 
 
 def train(args):
-    print(args)
+    logger.info(args)
     save_json_file(vars(args), os.path.join(args.output_dir, FILE_ARGUMENTS))
     processor = Processor(output_dir=args.output_dir, data_dir=args.data_dir, verbose=True)
     model = build_model(args, processor, load=args.recovery)

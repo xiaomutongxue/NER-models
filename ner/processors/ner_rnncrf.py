@@ -15,6 +15,7 @@ FILE_DATASET = "train.char.bmes"
 FILE_DATASET_CACHE = "dataset_cache.npz"
 FILE_ARGUMENTS = "args.json"
 FILE_MODEL = "bilstm_crf_model.pth"
+FILE_PREDICT = "predicted.json"
 
 START_TAG = "<START>"
 STOP_TAG = "<STOP>"

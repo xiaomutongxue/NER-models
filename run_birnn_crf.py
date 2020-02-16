@@ -20,7 +20,7 @@ from ner.processors.ner_seq import ner_processors as processors
 from ner.tools.common import logger, init_logger, seed_everything
 
 
-def build_model(args, processor, load=True, verbose=False):
+def build_model(args, processor, load=True):
     model = BiRnnCrf(len(processor.vocab),
                      len(processor.tags),
                      embedding_dim=args.embedding_dim,
@@ -32,8 +32,7 @@ def build_model(args, processor, load=True, verbose=False):
     if os.path.exists(model_path) and load:
         state_dict = torch.load(model_path)
         model.load_state_dict(state_dict)
-        if verbose:
-            logger.info("load model weights from {}".format(model_path))
+        logger.info("load model weights from {}".format(model_path))
     return model
 
 
@@ -120,17 +119,17 @@ class WordsTagger:
 
 
 def predict(args):
-    logger.info('perdict sentence:')
+    logger.info('predict sentence:')
     logger.info(args.predict_sentence)
     results = WordsTagger(args.output_dir, args.device)([args.predict_sentence])
     logger.info(json.dumps(results, ensure_ascii=False))
 
 
 def train(args):
-    logger.info(args)
+    print(args)
     save_json_file(vars(args), os.path.join(args.output_dir, FILE_ARGUMENTS))
     processor = Processor(output_dir=args.output_dir, data_dir=args.data_dir, verbose=True)
-    model = build_model(args, processor, load=args.recovery, verbose=True)
+    model = build_model(args, processor, load=args.recovery)
 
     # loss
     loss_path = os.path.join(args.output_dir, "loss.csv")
@@ -140,8 +139,8 @@ def train(args):
     (x_train, y_train), (x_val, y_val), (x_test, y_test) = processor.load_dataset(
         args.data_dir, args.output_dir, args.val_split, args.test_split, max_seq_len=args.max_seq_len)
     train_dl = DataLoader(TensorDataset(x_train, y_train), batch_size=args.batch_size, shuffle=True)
-    valid_dl = DataLoader(TensorDataset(x_val, y_val), batch_size=args.batch_size * 2)
-    test_dl = DataLoader(TensorDataset(x_test, y_test), batch_size=args.batch_size * 2)
+    valid_dl = DataLoader(TensorDataset(x_val, y_val), batch_size=args.batch_size, shuffle=True)
+    test_dl = DataLoader(TensorDataset(x_test, y_test), batch_size=args.batch_size, shuffle=True)
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
@@ -166,7 +165,7 @@ def train(args):
 
         # evaluation
         val_loss = _eval_model(model, device, dataloader=valid_dl, desc="eval").item()
-        logger.info('epoch:{}, val_loss:{}'.format(epoch, val_loss))
+        logger.info('epoch:{}, val_loss:{}'.format(epoch + 1, val_loss))
         # save losses
         losses[-1][-1] = val_loss
         _save_loss(losses, loss_path)
@@ -174,8 +173,8 @@ def train(args):
         # save model
         if not args.save_best_val_model or val_loss < best_val_loss:
             best_val_loss = val_loss
+            logger.info("new best model(epoch: {}, val_loss: {})".format(epoch + 1, best_val_loss))
             _save_model(args.output_dir, model)
-            logger.info("save model(epoch: {}) => {}".format(epoch, loss_path))
 
     # test
     test_loss = _eval_model(model, device, dataloader=test_dl, desc="test").item()
@@ -215,20 +214,17 @@ def main():
     parser.add_argument('--rnn_type', type=str, default="lstm", help='RNN type, choice: "lstm", "gru"')
     parser.add_argument('--predict_sentence', type=str, default="我哥常建生于1988年，是北京高级工程师。",
                         help="the sentence to be predicted")
-
     args = parser.parse_args()
 
-    if not os.path.exists(args.output_dir):
-        os.mkdir(args.output_dir)
-    args.output_dir = args.output_dir + '/{}'.format(args.rnn_type)
-    if not os.path.exists(args.output_dir):
-        os.mkdir(args.output_dir)
-    init_logger(log_file=args.output_dir + '/{}-{}.log'.format('birnncrf', args.task_name))
-
-    # Set seed
-    seed_everything(args.seed)
     # Prepare NER task
     args.task_name = args.task_name.lower()
+    args.output_dir = os.path.join(args.output_dir, args.rnn_type)
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+    init_logger(log_file=args.output_dir + '/{}-{}.log'.format('birnncrf', args.task_name))
+    # Set seed
+    seed_everything(args.seed)
+
     if args.do_train:
         train(args)
     if args.do_predict:

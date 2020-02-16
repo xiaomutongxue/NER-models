@@ -10,7 +10,7 @@ python3 run_birnn_crf.py \
   --data_dir=$GLUE_DIR/${TASK_NAME}/ \
   --output_dir=$OUTPUR_DIR/${TASK_NAME}_output/ \
   --max_seq_len=128 \
-  --num_epoch=20 \
+  --num_epoch=35 \
   --batch_size=32 \
   --save_best_val_model \
   --recovery \

@@ -91,7 +91,7 @@ class Processor:
         tag_file = os.path.join(dst_dir, FILE_TAGS)
         if not os.path.exists(vocab_file):
             data_path = os.path.join(data_dir, FILE_DATASET)
-            if os.path.exists(data_path):
+            if data_dir and os.path.exists(data_path):
                 lines = self._read_text(data_path)
                 vocab_set = set()
                 tag_set = set()

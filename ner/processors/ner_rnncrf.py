@@ -11,7 +11,6 @@ import torch
 
 FILE_VOCAB = "vocab.json"
 FILE_TAGS = "labels.json"
-FILE_DATASET = "train.char.bmes"
 FILE_DATASET_CACHE = "dataset_cache.npz"
 FILE_ARGUMENTS = "args.json"
 FILE_MODEL = "bilstm_crf_model.pth"
@@ -52,13 +51,13 @@ class Processor:
             words = []
             labels = []
             for line in f:
-                if line.startswith("-DOCSTART-") or line == "" or line == "\n":
+                if line.startswith("-DOCSTART-") or line == "" or line == "\n" or line == "end":
                     if words:
                         lines.append({"words": words, "labels": labels})
                         words = []
                         labels = []
                 else:
-                    splits = line.split(" ")
+                    splits = line.split()
                     words.append(splits[0])
                     if len(splits) > 1:
                         labels.append(splits[-1].replace("\n", ""))
@@ -90,28 +89,28 @@ class Processor:
     def _save_vocab(self, data_dir, dst_dir):
         vocab_file = os.path.join(dst_dir, FILE_VOCAB)
         tag_file = os.path.join(dst_dir, FILE_TAGS)
-        if not os.path.exists(vocab_file):
-            data_path = os.path.join(data_dir, FILE_DATASET)
-            if data_dir and os.path.exists(data_path):
-                lines = self._read_text(data_path)
-                vocab_set = set()
-                tag_set = set()
-                for (i, line) in enumerate(lines):
-                    text_a = line['words']
-                    # BIOS
-                    labels = []
-                    for x in line['labels']:
-                        if 'M-' in x:
-                            labels.append(x.replace('M-', 'I-'))
-                        elif 'E-' in x:
-                            labels.append(x.replace('E-', 'I-'))
-                        else:
-                            labels.append(x)
-
-                    vocab_set |= set(text_a)
-                    tag_set |= set(labels)
-                save_json_file(list(vocab_set), vocab_file)
-                save_json_file(list(tag_set), tag_file)
+        vocab_set = set()
+        tag_set = set()
+        if not os.path.exists(vocab_file) and data_dir:
+            for i in os.listdir(data_dir):
+                data_path = os.path.join(data_dir, i)
+                if os.path.exists(data_path):
+                    lines = self._read_text(data_path)
+                    for (i, line) in enumerate(lines):
+                        text_a = line['words']
+                        # BIOS
+                        labels = []
+                        for x in line['labels']:
+                            if 'M-' in x:
+                                labels.append(x.replace('M-', 'I-'))
+                            elif 'E-' in x:
+                                labels.append(x.replace('E-', 'I-'))
+                            else:
+                                labels.append(x)
+                        vocab_set |= set(text_a)
+                        tag_set |= set(labels)
+        save_json_file(list(vocab_set), vocab_file)
+        save_json_file(list(tag_set), tag_file)
 
     def load_dataset(self, data_dir, output_dir, val_split, test_split, max_seq_len):
         """load the train set
@@ -167,24 +166,26 @@ class Processor:
 
     def _build_corpus(self, data_dir, max_seq_len):
         xs, ys = [], []
-        data_path = os.path.join(data_dir, FILE_DATASET)
-        if os.path.exists(data_path):
-            lines = self._read_text(data_path)
-            for (i, line) in enumerate(lines):
-                text_a = line['words']
-                # BIOS
-                labels = []
-                for x in line['labels']:
-                    if 'M-' in x:
-                        labels.append(x.replace('M-', 'I-'))
-                    elif 'E-' in x:
-                        labels.append(x.replace('E-', 'I-'))
-                    else:
-                        labels.append(x)
-                xs.append(self.sent_to_vector(text_a, max_seq_len=max_seq_len))
-                ys.append(self.tags_to_vector(labels, max_seq_len=max_seq_len))
-                if len(text_a) != len(labels):
-                    raise ValueError('"sentence length({})" != "tags length({})" in line {}"'.format(
-                        len(text_a), len(labels), i + 1))
+        for i in os.listdir(data_dir):
+            data_path = os.path.join(data_dir, i)
+            if os.path.exists(data_path):
+                lines = self._read_text(data_path)
+                for (i, line) in enumerate(lines):
+                    text_a = line['words']
+                    # BIOS
+                    labels = []
+                    for x in line['labels']:
+                        if 'M-' in x:
+                            labels.append(x.replace('M-', 'I-'))
+                        elif 'E-' in x:
+                            labels.append(x.replace('E-', 'I-'))
+                        else:
+                            labels.append(x)
+                    xs.append(self.sent_to_vector(text_a, max_seq_len=max_seq_len))
+                    ys.append(self.tags_to_vector(labels, max_seq_len=max_seq_len))
+                    if len(text_a) != len(labels):
+                        raise ValueError('"sentence length({})" != "tags length({})" in line {}"'.format(
+                            len(text_a), len(labels), i + 1))
+
         xs, ys = np.asarray(xs), np.asarray(ys)
         return xs, ys

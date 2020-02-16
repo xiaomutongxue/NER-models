@@ -172,7 +172,7 @@ def predict(args):
 
 
 def train(args):
-    logger.info(args)
+    logger.info(str(args))
     save_json_file(vars(args), os.path.join(args.output_dir, FILE_ARGUMENTS))
     processor = Processor(output_dir=args.output_dir, data_dir=args.data_dir, verbose=True)
     model = build_model(args, processor, load=args.recovery)

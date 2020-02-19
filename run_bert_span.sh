@@ -3,6 +3,7 @@ export BERT_BASE_DIR=$CURRENT_DIR/prev_trained_model/bert-base
 export GLUE_DIR=$CURRENT_DIR/datasets
 export OUTPUR_DIR=$CURRENT_DIR/outputs
 TASK_NAME="cner"
+export CUDA_VISIBLE_DEVICES="0"
 
 python3 run_bert_span.py \
   --model_type=bert \

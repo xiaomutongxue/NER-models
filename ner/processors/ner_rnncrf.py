@@ -37,7 +37,8 @@ class Processor:
     def __init__(self, output_dir, data_dir='', verbose=True):
         self.output_dir = output_dir
         self.verbose = verbose
-        self._save_vocab(data_dir, output_dir)
+        if data_dir:
+            self._save_vocab(data_dir, output_dir)
         self.vocab, self.vocab_dict = self._load_list_file(FILE_VOCAB, offset=1, verbose=verbose)
         self.tags, self.tags_dict = self._load_list_file(FILE_TAGS, verbose=verbose)
 
@@ -89,9 +90,10 @@ class Processor:
     def _save_vocab(self, data_dir, dst_dir):
         vocab_file = os.path.join(dst_dir, FILE_VOCAB)
         tag_file = os.path.join(dst_dir, FILE_TAGS)
-        vocab_set = set()
-        tag_set = set()
-        if not os.path.exists(vocab_file) and data_dir:
+
+        if not os.path.exists(vocab_file):
+            vocab_set = set()
+            tag_set = set()
             for i in os.listdir(data_dir):
                 data_path = os.path.join(data_dir, i)
                 if os.path.exists(data_path):
@@ -109,8 +111,8 @@ class Processor:
                                 labels.append(x)
                         vocab_set |= set(text_a)
                         tag_set |= set(labels)
-        save_json_file(list(vocab_set), vocab_file)
-        save_json_file(list(tag_set), tag_file)
+            save_json_file(list(vocab_set), vocab_file)
+            save_json_file(list(tag_set), tag_file)
 
     def load_dataset(self, data_dir, output_dir, val_split, test_split, max_seq_len):
         """load the train set

@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+@author:XuMing（xuming624@qq.com)
+@description:
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

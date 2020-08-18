@@ -191,6 +191,7 @@ def train(args):
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     device = running_device(args.device)
+    logger.info(device)
     model.to(device)
 
     val_loss = 0

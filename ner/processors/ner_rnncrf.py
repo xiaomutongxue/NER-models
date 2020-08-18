@@ -173,7 +173,7 @@ class Processor:
         xs, ys = [], []
         for i in os.listdir(data_dir):
             data_path = os.path.join(data_dir, i)
-            if os.path.exists(data_path):
+            if os.path.exists(data_path) and "cached_" not in data_path:
                 lines = self._read_text(data_path)
                 for (i, line) in enumerate(lines):
                     text_a = line['words']

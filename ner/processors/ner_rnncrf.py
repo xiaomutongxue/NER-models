@@ -52,6 +52,7 @@ class Processor:
             words = []
             labels = []
             for line in f:
+                line = line.rstrip()
                 if line.startswith("-DOCSTART-") or line == "" or line == "\n" or line == "end":
                     if words:
                         lines.append({"words": words, "labels": labels})
@@ -59,6 +60,8 @@ class Processor:
                         labels = []
                 else:
                     splits = line.split()
+                    if not splits:
+                        continue
                     words.append(splits[0])
                     if len(splits) > 1:
                         labels.append(splits[-1].replace("\n", ""))

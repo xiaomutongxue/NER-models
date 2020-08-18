@@ -56,6 +56,7 @@ class DataProcessor(object):
             words = []
             labels = []
             for line in f:
+                line = line.rstrip()
                 if line.startswith("-DOCSTART-") or line == "" or line == "\n":
                     if words:
                         lines.append({"words": words, "labels": labels})

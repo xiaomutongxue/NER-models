@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author:XuMing（xuming624@qq.com)
+@author:XuMing(xuming624@qq.com)
 @description:
 """
 
@@ -242,6 +242,7 @@ def predict(args, model, tokenizer, prefix=""):
     # Note that DistributedSampler samples randomly
     test_sampler = SequentialSampler(test_dataset) if args.local_rank == -1 else DistributedSampler(test_dataset)
     test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=1, collate_fn=collate_fn)
+    id2vocab = {v: k for k, v in tokenizer.vocab.items()}
     # Eval
     logger.info("***** Running prediction %s *****", prefix)
     logger.info("  Num examples = %d", len(test_dataset))
@@ -249,6 +250,9 @@ def predict(args, model, tokenizer, prefix=""):
 
     results = []
     output_submit_file = os.path.join(pred_output_dir, prefix, "test_prediction.json")
+    output_entity_file = os.path.join(pred_output_dir, prefix, "test_prediction_entity.txt")
+    logger.info(output_submit_file)
+    logger.info(output_entity_file)
     pbar = ProgressBar(n_total=len(test_dataloader), desc="Predicting")
     for step, batch in enumerate(test_dataloader):
         model.eval()
@@ -263,14 +267,19 @@ def predict(args, model, tokenizer, prefix=""):
             preds, _ = model.crf._obtain_labels(logits, args.id2label, inputs['input_lens'])
         preds = preds[0][1:-1]  # [CLS]XXXX[SEP]
         label_entities = get_entities(preds, args.id2label, args.markup)
-        json_d = {'id': step, 'tag_seq': " ".join(preds), 'entities': label_entities}
+        sentence = ''.join([id2vocab[i] for i in batch[0].tolist()[0] if i in id2vocab][1:-1])
+        entity_names = " ".join([sentence[entity[1]:entity[2] + 1] for entity in label_entities])
+        json_d = {'id': step, 'tag_seq': " ".join(preds), 'entities': label_entities, 'sentence': sentence,
+                  'entity_names': entity_names}
         results.append(json_d)
         pbar(step)
     print(" ")
-    with open(output_submit_file, "w") as writer:
+    with open(output_submit_file, "w", encoding='utf-8') as writer:
         for record in results:
-            writer.write(json.dumps(record) + '\n')
-
+            writer.write(json.dumps(record, ensure_ascii=False) + '\n')
+    with open(output_entity_file, "w", encoding='utf-8') as writer:
+        for record in results:
+            writer.write(record['entity_names'] + '\n')
 
 def load_and_cache_examples(args, task, tokenizer, data_type='train'):
     if args.local_rank not in [-1, 0] and not evaluate:

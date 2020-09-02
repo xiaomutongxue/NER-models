@@ -248,5 +248,5 @@ class CluenerProcessor(DataProcessor):
 ner_processors = {
     "cner": CnerProcessor,
     'cluener': CluenerProcessor,
-    'people':CnerProcessor
+    'people': CnerProcessor
 }

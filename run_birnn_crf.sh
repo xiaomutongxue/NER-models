@@ -1,7 +1,7 @@
 CURRENT_DIR=`pwd`
 export GLUE_DIR=$CURRENT_DIR/datasets
 export OUTPUR_DIR=$CURRENT_DIR/outputs
-TASK_NAME="people"
+TASK_NAME="cner"
 export CUDA_VISIBLE_DEVICES="0"
 
 python3 run_birnn_crf.py \

@@ -183,9 +183,10 @@ class CnerProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        return ["X", 'B-CONT', 'B-EDU', 'B-LOC', 'B-NAME', 'B-ORG', 'B-PRO', 'B-RACE', 'B-TITLE',
-                'I-CONT', 'I-EDU', 'I-LOC', 'I-NAME', 'I-ORG', 'I-PRO', 'I-RACE', 'I-TITLE',
-                'O', 'S-NAME', 'S-ORG', 'S-RACE', "[CLS]", "[SEP]"]
+        return ['X', 'O', '[CLS]', '[SEP]',
+                'B-CONT', 'B-EDU', 'B-LOC', 'B-NAME', 'B-ORG', 'B-PRO', 'B-RACE', 'B-TITLE', 'B-PER', 'B-TIME',
+                'I-CONT', 'I-EDU', 'I-LOC', 'I-NAME', 'I-ORG', 'I-PRO', 'I-RACE', 'I-TITLE', 'I-PER', 'I-TIME',
+                ]
 
     def _create_examples(self, lines, set_type):
         """Creates examples for the training and dev sets."""
@@ -195,13 +196,15 @@ class CnerProcessor(DataProcessor):
                 continue
             guid = "%s-%s" % (set_type, i)
             text_a = line['words']
-            # BIOS
+            # BMESO, BIOES change to BIO
             labels = []
             for x in line['labels']:
                 if 'M-' in x:
                     labels.append(x.replace('M-', 'I-'))
                 elif 'E-' in x:
                     labels.append(x.replace('E-', 'I-'))
+                elif 'S-' in x:
+                    labels.append(x.replace('S-', 'B-'))
                 else:
                     labels.append(x)
             examples.append(InputExample(guid=guid, text_a=text_a, labels=labels))

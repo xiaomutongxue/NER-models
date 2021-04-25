@@ -2,7 +2,7 @@ CURRENT_DIR=`pwd`
 export BERT_BASE_DIR=$CURRENT_DIR/prev_trained_model/albert-base
 export GLUE_DIR=$CURRENT_DIR/datasets
 export OUTPUR_DIR=$CURRENT_DIR/outputs
-TASK_NAME="people"
+TASK_NAME="cner"
 export CUDA_VISIBLE_DEVICES="0"
 
 python3 run_bert_crf.py \
@@ -19,6 +19,6 @@ python3 run_bert_crf.py \
   --num_train_epochs=2.0 \
   --logging_steps=448 \
   --save_steps=448 \
-  --output_dir=$OUTPUR_DIR/${TASK_NAME}_output/ \
+  --output_dir=$OUTPUR_DIR/${TASK_NAME}_crf/ \
   --overwrite_output_dir \
   --seed=42

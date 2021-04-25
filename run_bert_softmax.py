@@ -3,6 +3,7 @@ import glob
 import json
 import logging
 import os
+from datetime import datetime
 
 import numpy as np
 import torch
@@ -20,8 +21,9 @@ from ner.processors.data_processor import CNerTokenizer, get_entities
 from ner.processors.ner_seq import collate_fn
 from ner.processors.ner_seq import convert_examples_to_features
 from ner.processors.ner_seq import ner_processors as processors
-from ner.tools.common import init_logger, logger, seed_everything
+from ner.tools.common import init_logger, seed_everything
 
+logger = init_logger(log_file='bert_softmax_{}.log'.format(datetime.today().strftime('%Y%m%d')))
 ALL_MODELS = sum((tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig,)), ())
 
 MODEL_CLASSES = {
@@ -139,7 +141,7 @@ def train(args, train_dataset, model, tokenizer):
                 global_step += 1
                 if args.local_rank in [-1, 0] and args.logging_steps > 0 and global_step % args.logging_steps == 0:
                     # Log metrics
-                    print(" ")
+                    print()
                     if args.local_rank == -1:
                         # Only evaluate when single GPU otherwise metrics may not average well
                         evaluate(args, model, tokenizer)
@@ -158,7 +160,7 @@ def train(args, train_dataset, model, tokenizer):
                     torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                     torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
                     logger.info("Saving optimizer and scheduler states to %s", output_dir)
-        print(" ")
+        print()
         if 'cuda' in str(args.device):
             torch.cuda.empty_cache()
     return global_step, tr_loss / global_step
@@ -211,7 +213,7 @@ def evaluate(args, model, tokenizer, prefix=""):
                     temp_1.append(args.id2label[out_label_ids[i][j]])
                     temp_2.append(preds[i][j])
         pbar(step)
-    print(' ')
+    print()
     eval_loss = eval_loss / nb_eval_steps
     eval_info, entity_info = metric.result()
     results = {f'{key}': value for key, value in eval_info.items()}
@@ -259,16 +261,18 @@ def predict(args, model, tokenizer, prefix=""):
         preds = preds[0][1:-1]  # [CLS]XXXX[SEP]
         tags = [args.id2label[x] for x in preds]
         label_entities = get_entities(preds, args.id2label, args.markup)
-        json_d = {}
-        json_d['id'] = step
-        json_d['tag_seq'] = " ".join(tags)
-        json_d['entities'] = label_entities
+        id2vocab = {v: k for k, v in tokenizer.vocab.items()}
+        sentence = ''.join([id2vocab[i] for i in batch[0].tolist()[0] if i in id2vocab][1:-1])
+        entity_names = " ".join([sentence[entity[1]:entity[2] + 1] for entity in label_entities])
+
+        json_d = {'id': step, 'tag_seq': " ".join(preds), 'entities': label_entities, 'sentence': sentence,
+                  'entity_names': entity_names}
         results.append(json_d)
         pbar(step)
-    print(" ")
+    print()
     with open(output_submit_file, "w") as writer:
         for record in results:
-            writer.write(json.dumps(record) + '\n')
+            writer.write(json.dumps(record, ensure_ascii=False) + '\n')
 
 
 def load_and_cache_examples(args, task, tokenizer, data_type='train'):

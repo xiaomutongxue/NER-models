@@ -9,7 +9,7 @@ python3 run_birnn_crf.py \
   --do_train \
   --do_predict \
   --data_dir=$GLUE_DIR/${TASK_NAME}/ \
-  --output_dir=$OUTPUR_DIR/${TASK_NAME}_output/ \
+  --output_dir=$OUTPUR_DIR/${TASK_NAME}_birnn_crf/ \
   --max_seq_len=128 \
   --num_epoch=1 \
   --batch_size=32 \

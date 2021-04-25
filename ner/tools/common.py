@@ -10,8 +10,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-logger = logging.getLogger()
-
 
 def print_config(config):
     info = "Running with the following configs:\n"
@@ -24,25 +22,32 @@ def print_config(config):
 def init_logger(log_file=None, log_file_level=logging.NOTSET):
     """
     Example:
-        >>> init_logger(log_file)
+        >>> logger = init_logger(log_file)
         >>> logger.info("abc'")
     """
     if isinstance(log_file, Path):
         log_file = str(log_file)
-    log_format = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
-                                   datefmt='%m/%d/%Y %H:%M:%S')
+    log_format = logging.Formatter('[%(levelname)7s %(asctime)s %(module)s:%(lineno)4d] %(message)s',
+                                   datefmt='%Y%m%d %I:%M:%S')
 
     logger = logging.getLogger()
+    logger.propagate = False
     logger.setLevel(logging.INFO)
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(log_format)
     logger.handlers = [console_handler]
     if log_file and log_file != '':
         file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(log_file_level)
-        # file_handler.setFormatter(log_format)
+        file_handler.setFormatter(log_format)
         logger.addHandler(file_handler)
     return logger
+
+
+logger = init_logger(log_file=None, log_file_level=logging.DEBUG)
+
+
+def set_log_level(log_level='INFO'):
+    logger.setLevel(log_level.upper())
 
 
 def seed_everything(seed=1029):

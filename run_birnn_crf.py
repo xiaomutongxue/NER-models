@@ -6,6 +6,7 @@
 import argparse
 import json
 import os
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -18,7 +19,9 @@ from ner.models.birnncrf.birnn_crf import BiRnnCrf
 from ner.processors.ner_rnncrf import Processor, load_json_file, FILE_MODEL, FILE_ARGUMENTS, save_json_file, \
     FILE_PREDICT
 from ner.processors.ner_seq import ner_processors as processors
-from ner.tools.common import logger, init_logger, seed_everything
+from ner.tools.common import init_logger, seed_everything
+
+logger = init_logger(log_file='birnn_crf_{}.log'.format(datetime.today().strftime('%Y%m%d')))
 
 
 def build_model(args, processor, load=True):
@@ -110,7 +113,7 @@ class WordsTagger:
                 begin = entity[1]
                 end = entity[2]
                 tag = entity[0]
-                tokens.append((sentence[begin:end+1],tag))
+                tokens.append((sentence[begin:end + 1], tag))
             return tokens
 
         tokens_list = [_tokens(sentence, ts) for sentence, ts in zip(sentences, tags_list)]

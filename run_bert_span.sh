@@ -22,6 +22,6 @@ python3 run_bert_span.py \
   --num_train_epochs=4.0 \
   --logging_steps=448 \
   --save_steps=448 \
-  --output_dir=$OUTPUR_DIR/${TASK_NAME}_output/ \
+  --output_dir=$OUTPUR_DIR/${TASK_NAME}_span/ \
   --overwrite_output_dir \
   --seed=42

@@ -9,6 +9,7 @@ import glob
 import json
 import logging
 import os
+from datetime import datetime
 
 import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
@@ -24,8 +25,9 @@ from ner.models.transformers import WEIGHTS_NAME, BertConfig, AlbertConfig
 from ner.processors.data_processor import CNerTokenizer, get_entities
 from ner.processors.ner_seq import collate_fn, convert_examples_to_features
 from ner.processors.ner_seq import ner_processors as processors
-from ner.tools.common import init_logger, logger, seed_everything
+from ner.tools.common import init_logger, seed_everything
 
+logger = init_logger(log_file='bert_crf_{}.log'.format(datetime.today().strftime('%Y%m%d')))
 ALL_MODELS = sum((tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig,)), ())
 
 MODEL_CLASSES = {
@@ -165,7 +167,7 @@ def train(args, train_dataset, model, tokenizer):
                     torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                     torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
                     logger.info("Saving optimizer and scheduler states to %s", output_dir)
-        print(" ")
+        print()
         if 'cuda' in str(args.device):
             torch.cuda.empty_cache()
     return global_step, tr_loss / global_step
@@ -218,7 +220,7 @@ def evaluate(args, model, tokenizer, prefix=""):
                     temp_1.append(args.id2label[out_label_ids[i][j]])
                     temp_2.append(tags[i][j])
         pbar(step)
-    print(' ')
+    print()
     eval_loss = eval_loss / nb_eval_steps
     eval_info, entity_info = metric.result()
     results = {f'{key}': value for key, value in eval_info.items()}
@@ -273,13 +275,14 @@ def predict(args, model, tokenizer, prefix=""):
                   'entity_names': entity_names}
         results.append(json_d)
         pbar(step)
-    print(" ")
-    with open(output_submit_file, "w", encoding='utf-8') as writer:
+    print()
+    with open(output_submit_file, "w", encoding='utf-8') as f:
         for record in results:
-            writer.write(json.dumps(record, ensure_ascii=False) + '\n')
-    with open(output_entity_file, "w", encoding='utf-8') as writer:
+            f.write(json.dumps(record, ensure_ascii=False) + '\n')
+    with open(output_entity_file, "w", encoding='utf-8') as f:
         for record in results:
-            writer.write(record['entity_names'] + '\n')
+            f.write(record['entity_names'] + '\n')
+
 
 def load_and_cache_examples(args, task, tokenizer, data_type='train'):
     if args.local_rank not in [-1, 0] and not evaluate:
@@ -413,7 +416,6 @@ def main():
     args.output_dir = args.output_dir + '{}'.format(args.model_type)
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
-    init_logger(log_file=args.output_dir + '/{}-{}.log'.format(args.model_type, args.task_name))
     if os.path.exists(args.output_dir) and os.listdir(
             args.output_dir) and args.do_train and not args.overwrite_output_dir:
         raise ValueError(
@@ -496,9 +498,8 @@ def main():
         checkpoints = [args.output_dir]
         if args.eval_all_checkpoints:
             checkpoints = list(
-                os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + "/**/" + WEIGHTS_NAME, recursive=True))
-            )
-            logging.getLogger("pytorch_transformers.modeling_utils").setLevel(logging.WARN)  # Reduce logging
+                os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + "/**/" + WEIGHTS_NAME, recursive=True)))
+            logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce logging
         logger.info("Evaluate the following checkpoints: %s", checkpoints)
         for checkpoint in checkpoints:
             global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""

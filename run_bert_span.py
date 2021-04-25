@@ -262,7 +262,7 @@ def predict(args, model, tokenizer, prefix=""):
     with open(output_submit_file, "w") as writer:
         for record in results:
             writer.write(json.dumps(record) + '\n')
-
+    logger.info('predict done.')
 
 def load_and_cache_examples(args, task, tokenizer, data_type='train'):
     if args.local_rank not in [-1, 0] and not evaluate:

@@ -25,7 +25,7 @@ from ner.models.transformers import WEIGHTS_NAME, BertConfig, AlbertConfig
 from ner.processors.data_processor import CNerTokenizer, get_entities
 from ner.processors.ner_seq import collate_fn, convert_examples_to_features
 from ner.processors.ner_seq import ner_processors as processors
-from ner.tools.common import init_logger, seed_everything
+from ner.tools.common import init_logger, seed_everything, save_json
 
 logger = init_logger(log_file='bert_crf_{}.log'.format(datetime.today().strftime('%Y%m%d')))
 ALL_MODELS = sum((tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig,)), ())
@@ -217,8 +217,11 @@ def evaluate(args, model, tokenizer, prefix=""):
                     metric.update(pred_paths=[temp_2], label_paths=[temp_1])
                     break
                 else:
-                    temp_1.append(args.id2label[out_label_ids[i][j]])
-                    temp_2.append(tags[i][j])
+                    try:
+                        temp_1.append(args.id2label[out_label_ids[i][j]])
+                        temp_2.append(tags[i][j])
+                    except Exception:
+                        continue
         pbar(step)
     print()
     eval_loss = eval_loss / nb_eval_steps
@@ -252,9 +255,7 @@ def predict(args, model, tokenizer, prefix=""):
 
     results = []
     output_submit_file = os.path.join(pred_output_dir, prefix, "test_prediction.json")
-    output_entity_file = os.path.join(pred_output_dir, prefix, "test_prediction_entity.txt")
     logger.info(output_submit_file)
-    logger.info(output_entity_file)
     pbar = ProgressBar(n_total=len(test_dataloader), desc="Predicting")
     for step, batch in enumerate(test_dataloader):
         model.eval()
@@ -279,9 +280,7 @@ def predict(args, model, tokenizer, prefix=""):
     with open(output_submit_file, "w", encoding='utf-8') as f:
         for record in results:
             f.write(json.dumps(record, ensure_ascii=False) + '\n')
-    with open(output_entity_file, "w", encoding='utf-8') as f:
-        for record in results:
-            f.write(record['entity_names'] + '\n')
+    logger.info('predict done.')
 
 
 def load_and_cache_examples(args, task, tokenizer, data_type='train'):

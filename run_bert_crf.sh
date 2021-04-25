@@ -9,8 +9,6 @@ python3 run_bert_crf.py \
   --model_type=albert \
   --model_name_or_path=$BERT_BASE_DIR \
   --task_name=$TASK_NAME \
-  --do_train \
-  --do_predict \
   --do_lower_case \
   --data_dir=$GLUE_DIR/${TASK_NAME}/ \
   --train_max_seq_length=128 \
@@ -21,4 +19,6 @@ python3 run_bert_crf.py \
   --save_steps=448 \
   --output_dir=$OUTPUR_DIR/${TASK_NAME}_crf/ \
   --overwrite_output_dir \
-  --seed=42
+  --seed=42 \
+  --do_train \
+  --do_predict

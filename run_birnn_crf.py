@@ -172,7 +172,7 @@ def predict(args):
     results = WordsTagger(args.output_dir, args.device)([args.predict_sentence])
     logger.info(json.dumps(results, ensure_ascii=False))
     save_json_file(results, os.path.join(args.output_dir, FILE_PREDICT))
-
+    logger.info('predict done.')
 
 def train(args):
     logger.info(str(args))

@@ -25,7 +25,7 @@ from ner.models.transformers import WEIGHTS_NAME, BertConfig, AlbertConfig
 from ner.processors.data_processor import CNerTokenizer, get_entities
 from ner.processors.ner_seq import collate_fn, convert_examples_to_features
 from ner.processors.ner_seq import ner_processors as processors
-from ner.tools.common import init_logger, seed_everything, save_json
+from ner.tools.common import init_logger, seed_everything
 
 logger = init_logger(log_file='bert_crf_{}.log'.format(datetime.today().strftime('%Y%m%d')))
 ALL_MODELS = sum((tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig,)), ())
@@ -221,6 +221,7 @@ def evaluate(args, model, tokenizer, prefix=""):
                         temp_1.append(args.id2label[out_label_ids[i][j]])
                         temp_2.append(tags[i][j])
                     except Exception:
+                        logger.warning('predict out of index, i_j: {}_{}'.format(i, j))
                         continue
         pbar(step)
     print()

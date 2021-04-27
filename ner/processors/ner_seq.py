@@ -183,7 +183,7 @@ class CnerProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        return ['X', 'O', '[CLS]', '[SEP]',
+        return ['X', 'O', '[CLS]', '[SEP]', 'B', 'I',
                 'B-CONT', 'B-EDU', 'B-LOC', 'B-NAME', 'B-ORG', 'B-PRO', 'B-RACE', 'B-TITLE', 'B-PER', 'B-TIME',
                 'I-CONT', 'I-EDU', 'I-LOC', 'I-NAME', 'I-ORG', 'I-PRO', 'I-RACE', 'I-TITLE', 'I-PER', 'I-TIME',
                 ]

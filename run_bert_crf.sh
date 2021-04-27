@@ -21,4 +21,5 @@ python3 run_bert_crf.py \
   --overwrite_output_dir \
   --seed=42 \
   --do_train \
+  --do_eval \
   --do_predict

@@ -121,7 +121,8 @@ class WordsTagger:
 
 
 def get_entity_bios(seq, id2label=None):
-    """Gets entities from sequence.
+    """
+    Gets entities from sequence.
     note: BIOS
     Args:
         seq (list): sequence of labels.
@@ -174,6 +175,7 @@ def predict(args):
     save_json_file(results, os.path.join(args.output_dir, FILE_PREDICT))
     logger.info('predict done.')
 
+
 def train(args):
     logger.info(str(args))
     save_json_file(vars(args), os.path.join(args.output_dir, FILE_ARGUMENTS))
@@ -213,7 +215,7 @@ def train(args):
                 epoch + 1, args.num_epoch, loss, val_loss))
             losses.append([epoch, bi, loss.item(), np.nan])
 
-        # evaluation
+        # evaluate
         val_loss = _eval_model(model, device, dataloader=valid_dl, desc="eval").item()
         logger.info('epoch:{}, val_loss:{}'.format(epoch + 1, val_loss))
         # save losses

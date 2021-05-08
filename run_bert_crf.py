@@ -110,7 +110,7 @@ def train(args, train_dataset, model, tokenizer):
     tr_loss, logging_loss = 0.0, 0.0
     model.zero_grad()
     seed_everything(args.seed)  # Added here for reproductibility (even between python 2 and 3)
-    for _ in range(int(args.num_train_epochs)):
+    for epoch in range(int(args.num_train_epochs)):
         pbar = ProgressBar(n_total=len(train_dataloader), desc='Training')
         for step, batch in enumerate(train_dataloader):
             # Skip past any already trained steps if resuming training
@@ -134,7 +134,7 @@ def train(args, train_dataset, model, tokenizer):
                     scaled_loss.backward()
             else:
                 loss.backward()
-            pbar(step, {'loss': loss.item()})
+            pbar(step, {'loss': loss.item(), 'epoch': '{}/{}'.format(epoch + 1, args.num_train_epochs)})
             tr_loss += loss.item()
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 if args.fp16:

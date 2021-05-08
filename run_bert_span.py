@@ -259,9 +259,10 @@ def predict(args, model, tokenizer, prefix=""):
         results.append(json_d)
         pbar(step)
     print()
-    with open(output_submit_file, "w") as writer:
+    logger.info(output_submit_file)
+    with open(output_submit_file, "w", encoding='utf-8') as f:
         for record in results:
-            writer.write(json.dumps(record) + '\n')
+            f.write(json.dumps(record, ensure_ascii=False) + '\n')
     logger.info('predict done.')
 
 

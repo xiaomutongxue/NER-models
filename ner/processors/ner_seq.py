@@ -186,7 +186,7 @@ class CnerProcessor(DataProcessor):
         return ['X', 'O', '[CLS]', '[SEP]',
                 'B-CONT', 'B-EDU', 'B-LOC', 'B-NAME', 'B-ORG', 'B-PRO', 'B-RACE', 'B-TITLE', 'B-PER', 'B-TIME',
                 'I-CONT', 'I-EDU', 'I-LOC', 'I-NAME', 'I-ORG', 'I-PRO', 'I-RACE', 'I-TITLE', 'I-PER', 'I-TIME',
-                ]
+                'B-OTH', 'I-OTH',]
 
     def _create_examples(self, lines, set_type):
         """Creates examples for the training and dev sets."""
